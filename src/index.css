@@ -86,7 +86,7 @@ body { background: var(--bg-primary); color: var(--text-primary); font-family: s
 .leaflet-map { width: 100%; height: 100%; }
 
 /* Leaflet day marker */
-.day-marker { background: #1e3a5f; border: 2px solid #64b5f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: bold; }
+.day-marker { background: #1e3a5f; border: 2px solid #64b5f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: bold; padding: 0 3px; white-space: nowrap; }
 .day-marker--festival { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 .day-marker--selected { background: var(--accent); border-color: #fff; color: #000; }
 

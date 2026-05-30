@@ -13,7 +13,7 @@ export default function App() {
   const [savedTrips, setSavedTrips] = useLocalStorage(STORAGE_KEY, [])
 
   function handleGenerate(countryMeta, countryData, month, duration) {
-    const days = generateItinerary(countryData, month, duration)
+    const days = generateItinerary(countryData, countryMeta, month, duration)
     const itinerary = {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
