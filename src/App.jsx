@@ -1,122 +1,64 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { generateItinerary } from './utils/generateItinerary.js'
+import { useLocalStorage } from './hooks/useLocalStorage.js'
+import { LandingView } from './components/LandingView.jsx'
+import { ItineraryView } from './components/ItineraryView.jsx'
 
-function App() {
-  const [count, setCount] = useState(0)
+const STORAGE_KEY = 'adventure-planner-saved-trips'
+
+export default function App() {
+  const [view, setView] = useState('landing')
+  const [activeItinerary, setActiveItinerary] = useState(null)
+  const [activeMeta, setActiveMeta] = useState(null)
+  const [savedTrips, setSavedTrips] = useLocalStorage(STORAGE_KEY, [])
+
+  function handleGenerate(countryMeta, countryData, month, duration) {
+    const days = generateItinerary(countryData, month, duration)
+    const itinerary = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      country: countryMeta.id,
+      countryName: countryMeta.name,
+      month, duration, days,
+    }
+    setActiveItinerary(itinerary)
+    setActiveMeta(countryMeta)
+    setView('itinerary')
+  }
+
+  function handleSave() {
+    setSavedTrips(prev => {
+      const updated = [activeItinerary, ...prev.filter(t => t.id !== activeItinerary.id)]
+      return updated.slice(0, 10)
+    })
+  }
+
+  function handleLoad(trip) {
+    import('./data/countries/metadata.json').then(m => {
+      const meta = m.default.find(c => c.id === trip.country)
+      setActiveMeta(meta)
+      setActiveItinerary(trip)
+      setView('itinerary')
+    })
+  }
+
+  if (view === 'itinerary' && activeItinerary) {
+    return (
+      <ItineraryView
+        itinerary={activeItinerary}
+        countryMeta={activeMeta}
+        onBack={() => setView('landing')}
+        onSave={handleSave}
+      />
+    )
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <LandingView
+      savedTrips={savedTrips}
+      onGenerate={handleGenerate}
+      onLoad={handleLoad}
+      onDeleteTrip={id => setSavedTrips(prev => prev.filter(t => t.id !== id))}
+    />
   )
 }
-
-export default App
