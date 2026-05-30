@@ -1,6 +1,5 @@
 import { distanceKm } from './geo.js'
 
-// Returns destinations in nearest-neighbour order starting from fromCoords (no cycling)
 function nearestNeighbour(fromCoords, destinations) {
   const remaining = [...destinations]
   const result = []
@@ -19,10 +18,19 @@ function nearestNeighbour(fromCoords, destinations) {
   return result
 }
 
-// Repeats arr cyclically to produce exactly count items
-function fill(arr, count) {
-  if (arr.length === 0 || count <= 0) return []
-  return Array.from({ length: count }, (_, i) => arr[i % arr.length])
+// Spreads totalDays across ordered destinations with consecutive extended stays.
+// Extra nights go to the first destinations (closest to start of leg) to avoid back-tracking.
+// e.g. distributeExtraDays([A,B,C], 5) → [A,A,B,B,C]  (no A,B,C,A,B wasted trips)
+function distributeExtraDays(ordered, totalDays) {
+  if (ordered.length === 0 || totalDays <= 0) return []
+  const result = []
+  const base = Math.floor(totalDays / ordered.length)
+  const extra = totalDays % ordered.length
+  ordered.forEach((dest, i) => {
+    const nights = base + (i < extra ? 1 : 0)
+    for (let n = 0; n < nights; n++) result.push(dest)
+  })
+  return result
 }
 
 function makeDestDay(day, dest) {
@@ -45,7 +53,6 @@ export function generateItinerary(country, countryMeta, month, duration) {
   const entry = countryMeta.entryCity
   const days = []
 
-  // Day 1: arrival at international airport / entry city
   days.push({
     day: 1, destinationId: 'entry', festivalId: null,
     title: `${entry.name} — Arrival`,
@@ -53,45 +60,43 @@ export function generateItinerary(country, countryMeta, month, duration) {
     coords: entry.coords, links: [],
   })
 
-  const innerDays = duration - 2  // days between arrival and departure
+  const innerDays = duration - 2
   const activeFestivals = country.festivals.filter(f => f.dates.month === month)
   const primaryFestival = activeFestivals.find(f => f.importance === 'primary') ?? activeFestivals[0] ?? null
 
   if (innerDays > 0) {
     if (primaryFestival) {
       const f = primaryFestival
-      const festDays = Math.min(f.dates.endDay - f.dates.startDay + 1, 2)  // cap at 2 days
+      const festDays = Math.min(f.dates.endDay - f.dates.startDay + 1, 2)
       const explorationDays = innerDays - festDays
       const preCount = Math.max(0, Math.floor(explorationDays / 2))
       const postCount = Math.max(0, explorationDays - preCount)
 
-      // Pre-festival: nearest-neighbour from entry city
+      // Pre-festival: NN from entry, extend stays consecutively rather than back-tracking
       const preOrdered = nearestNeighbour(entry.coords, country.destinations)
-      const preDests = fill(preOrdered, preCount)
+      const uniquePreDests = preOrdered.slice(0, Math.min(preCount, preOrdered.length))
+      const preDests = distributeExtraDays(uniquePreDests, preCount)
 
-      // Post-festival: use destinations not already visited first, then repeat if needed
-      const preUsedIds = new Set(preDests.map(d => d.id))
+      // Post-festival: use destinations not in pre first, extend consecutive stays
+      const preUsedIds = new Set(uniquePreDests.map(d => d.id))
       const unused = country.destinations.filter(d => !preUsedIds.has(d.id))
-      const unusedPostOrdered = nearestNeighbour(f.location.coords, unused)
-      const allPostOrdered = nearestNeighbour(f.location.coords, country.destinations)
-      const postDests = Array.from({ length: postCount }, (_, i) =>
-        i < unusedPostOrdered.length ? unusedPostOrdered[i] : allPostOrdered[(i - unusedPostOrdered.length) % allPostOrdered.length]
-      )
+      const postPool = unused.length > 0 ? unused : country.destinations
+      const postOrdered = nearestNeighbour(f.location.coords, postPool)
+      const postDests = distributeExtraDays(postOrdered, postCount)
 
       let dayNum = 2
       for (const dest of preDests) days.push(makeDestDay(dayNum++, dest))
       for (let i = 0; i < festDays; i++) days.push(makeFestDay(dayNum++, f, i + 1, festDays))
       for (const dest of postDests) days.push(makeDestDay(dayNum++, dest))
     } else {
-      // No festival — nearest-neighbour from entry, cycling if needed
+      // No festival: NN from entry with consecutive extended stays
       const ordered = nearestNeighbour(entry.coords, country.destinations)
-      const dests = fill(ordered, innerDays)
+      const dests = distributeExtraDays(ordered, innerDays)
       let dayNum = 2
       for (const dest of dests) days.push(makeDestDay(dayNum++, dest))
     }
   }
 
-  // Last day: return to entry city for departure flight
   days.push({
     day: duration, destinationId: 'entry-return', festivalId: null,
     title: `${entry.name} — Departure`,
