@@ -9,9 +9,12 @@ function MapUpdater({ center, zoom }) {
   return null
 }
 
-function dayIcon(dayNum, isFestival) {
+function dayIcon(dayNum, isFestival, isSelected) {
+  const classes = ['day-marker']
+  if (isFestival) classes.push('day-marker--festival')
+  if (isSelected) classes.push('day-marker--selected')
   return L.divIcon({
-    className: `day-marker${isFestival ? ' day-marker--festival' : ''}`,
+    className: classes.join(' '),
     html: `<span>${dayNum}</span>`,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
@@ -34,7 +37,7 @@ export function MapPanel({ days, selectedDay, onSelectDay, center, zoom }) {
           <Marker
             key={day.day}
             position={[day.coords.lat, day.coords.lng]}
-            icon={dayIcon(day.day, !!day.festivalId)}
+            icon={dayIcon(day.day, !!day.festivalId, day.day === selectedDay)}
             eventHandlers={{ click: () => onSelectDay(day.day) }}
           >
             <Popup>{day.day}. {day.title}</Popup>

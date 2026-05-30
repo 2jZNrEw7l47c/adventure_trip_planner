@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { ItineraryView } from './ItineraryView.jsx'
 
 vi.mock('./MapPanel.jsx', () => ({
@@ -22,16 +22,19 @@ const mockItinerary = {
 describe('ItineraryView', () => {
   it('shows title in top bar', () => {
     render(<ItineraryView itinerary={mockItinerary} countryMeta={mockMeta} onBack={() => {}} onSave={() => {}} />)
-    expect(screen.getAllByText('Mongolia · July · 3d').length).toBeGreaterThan(0)
+    const topBar = document.querySelector('.top-bar')
+    expect(within(topBar).getByText('Mongolia · July · 3d')).toBeInTheDocument()
   })
   it('shows day 1 detail by default', () => {
     render(<ItineraryView itinerary={mockItinerary} countryMeta={mockMeta} onBack={() => {}} onSave={() => {}} />)
-    expect(screen.getAllByText('Day One').length).toBeGreaterThan(0)
+    // Check the h2 in DayDetailPanel (not the print section which uses h3)
+    expect(screen.getByRole('heading', { level: 2, name: 'Day One' })).toBeInTheDocument()
   })
   it('clicking sidebar chip updates detail panel', () => {
     render(<ItineraryView itinerary={mockItinerary} countryMeta={mockMeta} onBack={() => {}} onSave={() => {}} />)
     const chips = screen.getAllByRole('button')
     fireEvent.click(chips.find(b => b.textContent.includes('Naadam')))
-    expect(screen.getAllByText('Notes 2').length).toBeGreaterThan(0)
+    // Check the h2 in DayDetailPanel updates (not the print section h3)
+    expect(screen.getByRole('heading', { level: 2, name: 'Naadam' })).toBeInTheDocument()
   })
 })

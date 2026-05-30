@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { TopBar } from './TopBar.jsx'
 import { DayListSidebar } from './DayListSidebar.jsx'
 import { MapPanel } from './MapPanel.jsx'
@@ -10,6 +10,10 @@ export function ItineraryView({ itinerary, countryMeta, onBack, onSave }) {
   const [selectedDay, setSelectedDay] = useState(1)
   const currentDay = itinerary.days.find(d => d.day === selectedDay) ?? null
   const title = `${countryMeta.name} · ${MONTH_NAMES[itinerary.month - 1]} · ${itinerary.duration}d`
+  const center = useMemo(
+    () => [countryMeta.entryCity.coords.lat, countryMeta.entryCity.coords.lng],
+    [countryMeta.entryCity.coords.lat, countryMeta.entryCity.coords.lng]
+  )
   return (
     <div className="itinerary-view">
       <TopBar title={title} onBack={onBack} onSave={onSave} onPrint={() => window.print()} />
@@ -19,12 +23,12 @@ export function ItineraryView({ itinerary, countryMeta, onBack, onSave }) {
           days={itinerary.days}
           selectedDay={selectedDay}
           onSelectDay={setSelectedDay}
-          center={[countryMeta.entryCity.coords.lat, countryMeta.entryCity.coords.lng]}
+          center={center}
           zoom={5}
         />
         <DayDetailPanel day={currentDay} />
       </div>
-      <div className="print-itinerary">
+      <div className="print-itinerary" style={{ display: 'none' }}>
         <h2>{title}</h2>
         {itinerary.days.map(day => (
           <div key={day.day} className="print-day">
