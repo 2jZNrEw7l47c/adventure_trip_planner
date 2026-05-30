@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { LandingView } from './LandingView.jsx'
 
 vi.mock('../data/countries/metadata.json', () => ({
-  default: [{ id: 'mongolia', name: 'Mongolia', flag: '🇲🇳', entryCity: { name: 'UB', coords: { lat: 47.9, lng: 106.9 } }, festivalMonths: [7] }]
+  default: [{ id: 'mongolia', name: 'Mongolia', flag: '🇲🇳', continent: 'Asia', entryCity: { name: 'UB', coords: { lat: 47.9, lng: 106.9 } }, festivalMonths: [7] }]
 }))
 vi.mock('../hooks/useCountryData.js', () => ({
   useCountryData: () => ({ data: null, loading: false })

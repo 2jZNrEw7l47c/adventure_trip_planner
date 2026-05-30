@@ -65,13 +65,18 @@ export function generateItinerary(country, countryMeta, month, duration) {
       const preCount = Math.max(0, Math.floor(explorationDays / 2))
       const postCount = Math.max(0, explorationDays - preCount)
 
-      // Pre-festival: nearest-neighbour route from entry city
+      // Pre-festival: nearest-neighbour from entry city
       const preOrdered = nearestNeighbour(entry.coords, country.destinations)
       const preDests = fill(preOrdered, preCount)
 
-      // Post-festival: nearest-neighbour from festival location back toward entry
-      const postOrdered = nearestNeighbour(f.location.coords, country.destinations)
-      const postDests = fill(postOrdered, postCount)
+      // Post-festival: use destinations not already visited first, then repeat if needed
+      const preUsedIds = new Set(preDests.map(d => d.id))
+      const unused = country.destinations.filter(d => !preUsedIds.has(d.id))
+      const unusedPostOrdered = nearestNeighbour(f.location.coords, unused)
+      const allPostOrdered = nearestNeighbour(f.location.coords, country.destinations)
+      const postDests = Array.from({ length: postCount }, (_, i) =>
+        i < unusedPostOrdered.length ? unusedPostOrdered[i] : allPostOrdered[(i - unusedPostOrdered.length) % allPostOrdered.length]
+      )
 
       let dayNum = 2
       for (const dest of preDests) days.push(makeDestDay(dayNum++, dest))

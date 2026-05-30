@@ -2,8 +2,8 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { CountrySelector } from './CountrySelector.jsx'
 
 const mockMeta = vi.hoisted(() => [
-  { id: 'mongolia', name: 'Mongolia', flag: '🇲🇳' },
-  { id: 'nepal', name: 'Nepal', flag: '🇳🇵' },
+  { id: 'mongolia', name: 'Mongolia', flag: '🇲🇳', continent: 'Asia' },
+  { id: 'nepal', name: 'Nepal', flag: '🇳🇵', continent: 'Asia' },
 ])
 vi.mock('../data/countries/metadata.json', () => ({ default: mockMeta }))
 
