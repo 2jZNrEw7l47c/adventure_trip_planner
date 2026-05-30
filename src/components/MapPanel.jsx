@@ -3,9 +3,13 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-function MapUpdater({ center, zoom }) {
+function FitBounds({ positions }) {
   const map = useMap()
-  useEffect(() => { map.setView(center, zoom) }, [center, zoom, map])
+  useEffect(() => {
+    if (positions.length > 0) {
+      map.fitBounds(positions, { padding: [32, 32] })
+    }
+  }, [positions, map])
   return null
 }
 
@@ -31,7 +35,7 @@ export function MapPanel({ days, selectedDay, onSelectDay, center, zoom }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='© <a href="https://www.openstreetmap.org">OpenStreetMap</a>'
         />
-        <MapUpdater center={center} zoom={zoom} />
+        <FitBounds positions={positions} />
         <Polyline positions={positions} color="#f0a500" weight={2} opacity={0.7} />
         {days.map(day => (
           <Marker

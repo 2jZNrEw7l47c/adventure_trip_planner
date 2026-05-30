@@ -9,7 +9,7 @@ vi.mock('react-leaflet', () => ({
   ),
   Popup: ({ children }) => <div>{children}</div>,
   Polyline: () => null,
-  useMap: () => ({ setView: vi.fn() }),
+  useMap: () => ({ setView: vi.fn(), fitBounds: vi.fn() }),
 }))
 vi.mock('leaflet', () => ({ default: { divIcon: vi.fn(() => ({})) } }))
 
