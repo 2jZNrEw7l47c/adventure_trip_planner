@@ -11,6 +11,7 @@ const root = patheResolve(process.cwd())
 
 export default defineConfig({
   root,
+  base: '/adventure_trip_planner/',
   plugins: [react()],
   test: { environment: 'jsdom', setupFiles: ['./src/test-setup.js'], globals: true, root },
 })
