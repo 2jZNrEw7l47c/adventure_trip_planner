@@ -24,6 +24,16 @@ export function ItineraryView({ itinerary, countryMeta, onBack, onSave }) {
         />
         <DayDetailPanel day={currentDay} />
       </div>
+      <div className="print-itinerary">
+        <h2>{title}</h2>
+        {itinerary.days.map(day => (
+          <div key={day.day} className="print-day">
+            <h3>Day {day.day}{day.festivalId ? ' ★' : ''} — {day.title}</h3>
+            <p>{day.notes}</p>
+            {day.links.map((l, i) => <div key={i}>{l.label}: {l.url}</div>)}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
